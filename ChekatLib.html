@@ -1,0 +1,678 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ChekatLib</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap">
+<style>
+/* Layout: sticky header, hero with fanned covers, horizontal shelves, filterable catalog grid, title page, full-screen vertical reader, author studio gated by subscription. Dark-first (teal glow), light variant (blue). */
+:root {
+  color-scheme: dark;
+  --bg: #0e1218;
+  --bg2: #131922;
+  --surface: #171e29;
+  --surface2: #1f2835;
+  --line: #2a3544;
+  --fg: #e9eff5;
+  --muted: #92a0b1;
+  --accent: #2de2c6;
+  --on-accent: #04201b;
+  --accent-soft: rgba(45, 226, 198, 0.13);
+  --warm: #ff9a3c;
+  --warm-soft: rgba(255, 154, 60, 0.15);
+  --glow: 0 0 22px rgba(45, 226, 198, 0.32);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.38);
+  --header-bg: rgba(14, 18, 24, 0.88);
+  --ornament: 0.1;
+  --font-display: "Montserrat", "Segoe UI", Arial, sans-serif;
+  --font-body: "Manrope", "Segoe UI", Arial, sans-serif;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #f3f7fc;
+    --bg2: #e8eff9;
+    --surface: #ffffff;
+    --surface2: #edf2fa;
+    --line: #d5dfee;
+    --fg: #0d1b2e;
+    --muted: #51647c;
+    --accent: #1665e6;
+    --on-accent: #ffffff;
+    --accent-soft: rgba(22, 101, 230, 0.1);
+    --warm: #b84f06;
+    --warm-soft: rgba(184, 79, 6, 0.1);
+    --glow: 0 8px 20px rgba(22, 101, 230, 0.28);
+    --shadow: 0 10px 28px rgba(30, 60, 110, 0.13);
+    --header-bg: rgba(243, 247, 252, 0.9);
+    --ornament: 0.08;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f7fc;
+  --bg2: #e8eff9;
+  --surface: #ffffff;
+  --surface2: #edf2fa;
+  --line: #d5dfee;
+  --fg: #0d1b2e;
+  --muted: #51647c;
+  --accent: #1665e6;
+  --on-accent: #ffffff;
+  --accent-soft: rgba(22, 101, 230, 0.1);
+  --warm: #b84f06;
+  --warm-soft: rgba(184, 79, 6, 0.1);
+  --glow: 0 8px 20px rgba(22, 101, 230, 0.28);
+  --shadow: 0 10px 28px rgba(30, 60, 110, 0.13);
+  --header-bg: rgba(243, 247, 252, 0.9);
+  --ornament: 0.08;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.55 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 40px;
+  transition: background 0.25s, color 0.25s;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 40;
+  background: var(--header-bg);
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; line-height: 1.15; }
+p { margin: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+
+/* header */
+.top {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 30;
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+  background: var(--header-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.top .wrap { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 9px; background: none; border: 0; padding: 0; color: var(--accent); }
+.logo svg { width: 32px; height: 32px; filter: drop-shadow(var(--glow)); }
+.wm { font: 800 21px/1 var(--font-display); letter-spacing: 0.02em; color: var(--fg); display: flex; align-items: center; gap: 5px; }
+.wm i { font-style: normal; font-size: 11px; letter-spacing: 0.08em; padding: 3px 6px; border-radius: 5px; background: var(--accent); color: var(--on-accent); }
+.nav { display: flex; gap: 4px; order: 3; width: 100%; overflow-x: auto; scrollbar-width: none; }
+.nav::-webkit-scrollbar { display: none; }
+.nav button { background: none; border: 0; padding: 8px 12px; border-radius: 8px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.nav button:hover { color: var(--fg); background: var(--surface); }
+.nav button[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+.search { flex: 1 1 160px; min-width: 0; position: relative; margin-left: auto; max-width: 340px; }
+.search input { width: 100%; padding: 9px 12px 9px 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+.search input::placeholder { color: var(--muted); }
+.search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); }
+.tbtn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; color: var(--accent); flex: none; }
+.tbtn:hover { box-shadow: var(--glow); }
+.tbtn svg { width: 19px; height: 19px; }
+@media (min-width: 880px) {
+  .nav { order: 0; width: auto; margin-left: 10px; }
+  .search { margin-left: auto; }
+}
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; border-radius: 12px; border: 1px solid transparent; font-weight: 700; background: var(--accent); color: var(--on-accent); box-shadow: var(--glow); transition: transform 0.15s; }
+.btn:hover { transform: translateY(-1px); }
+.btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); box-shadow: none; }
+.btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn.sm { padding: 8px 14px; font-size: 14px; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn svg { width: 17px; height: 17px; }
+
+/* hero */
+.hero { position: relative; margin-top: 22px; border-radius: 22px; border: 1px solid var(--line); background: linear-gradient(135deg, var(--bg2), var(--surface)); overflow: hidden; padding: clamp(22px, 5vw, 52px); display: grid; gap: 28px; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); align-items: center; }
+.hero .orn { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--accent); opacity: var(--ornament); pointer-events: none; -webkit-mask-image: linear-gradient(100deg, transparent 20%, #000); mask-image: linear-gradient(100deg, transparent 20%, #000); }
+.hero > * { position: relative; }
+.kicker { font: 700 12px var(--font-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.hero h1 { font-size: clamp(30px, 5.2vw, 52px); font-weight: 800; letter-spacing: -0.01em; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero .lead { color: var(--muted); max-width: 46ch; margin: 16px 0 24px; font-size: 16px; }
+.hero .kg { margin-top: 18px; font: 600 13px var(--font-body); color: var(--warm); letter-spacing: 0.04em; }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; }
+.fan { position: relative; height: clamp(230px, 34vw, 340px); }
+.fan .cardwrap { position: absolute; bottom: 0; width: 42%; aspect-ratio: 3 / 4; border-radius: 14px; box-shadow: var(--shadow); border: 0; padding: 0; background: none; transition: transform 0.25s; }
+.fan .cardwrap:nth-child(1) { left: 2%; transform: rotate(-8deg) translateY(10px); }
+.fan .cardwrap:nth-child(2) { left: 29%; z-index: 2; width: 46%; transform: translateY(-6px); }
+.fan .cardwrap:nth-child(3) { right: 2%; transform: rotate(8deg) translateY(10px); }
+.fan .cardwrap:hover { transform: translateY(-14px) rotate(0); z-index: 3; }
+@media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+
+/* covers */
+.cover { position: relative; width: 100%; height: 100%; border-radius: inherit; overflow: hidden; background: linear-gradient(155deg, var(--c1), var(--c2)); container-type: inline-size; color: #fff; text-align: left; }
+.cover.img { background-size: cover; background-position: center; }
+.cover svg.sc { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cover .ct { position: absolute; left: 9%; right: 9%; top: 9%; font: 800 clamp(11px, 9.5cqw, 24px)/1.1 var(--font-display); text-transform: uppercase; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45); overflow-wrap: anywhere; }
+.cover .cs { position: absolute; left: 9%; bottom: 7%; font: 600 clamp(8px, 5cqw, 12px) var(--font-body); opacity: 0.85; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* cards & shelves */
+section.block { margin-top: 42px; }
+.bh { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.bh h2 { font-size: clamp(20px, 3vw, 26px); font-weight: 800; }
+.bh p { color: var(--muted); font-size: 14px; }
+.bh .more { background: none; border: 0; color: var(--accent); font-weight: 700; padding: 4px 0; }
+.row { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 14px; scroll-snap-type: x proximity; }
+.row .card { flex: 0 0 148px; scroll-snap-align: start; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 18px 14px; }
+.card { background: none; border: 0; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.card .cv { position: relative; aspect-ratio: 3 / 4; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); transition: transform 0.2s, box-shadow 0.2s; }
+.card:hover .cv { transform: translateY(-4px); box-shadow: var(--shadow), var(--glow); }
+.card .t { font-weight: 700; font-size: 14px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card .s { color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.badge { position: absolute; top: 8px; right: 8px; z-index: 2; font: 700 10.5px var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: rgba(8, 12, 18, 0.72); color: #fff; backdrop-filter: blur(4px); }
+.badge.kg { background: var(--warm); color: #1b0e00; }
+.badge.mine { background: var(--accent); color: var(--on-accent); }
+.fav { position: absolute; left: 8px; top: 8px; z-index: 2; width: 26px; height: 26px; border-radius: 50%; background: rgba(8, 12, 18, 0.72); display: grid; place-items: center; color: var(--accent); }
+.fav svg { width: 14px; height: 14px; }
+
+/* kg tabs */
+.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); margin-bottom: 18px; flex-wrap: wrap; }
+.tabs button { border: 0; background: none; padding: 8px 14px; border-radius: 9px; font-weight: 700; color: var(--muted); }
+.tabs button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+
+/* author promo */
+.promo { margin-top: 46px; border-radius: 20px; padding: clamp(20px, 4vw, 38px); border: 1px solid var(--line); background: linear-gradient(120deg, var(--warm-soft), var(--accent-soft)); display: flex; gap: 20px 32px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.promo h2 { font-size: clamp(20px, 3vw, 28px); font-weight: 800; max-width: 22ch; }
+.promo p { color: var(--muted); margin-top: 8px; max-width: 52ch; }
+
+/* catalog */
+.pagehead { margin: 28px 0 18px; }
+.pagehead h1 { font-size: clamp(26px, 4vw, 38px); font-weight: 800; }
+.pagehead p { color: var(--muted); margin-top: 6px; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-bottom: 22px; padding: 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface2); font-weight: 600; font-size: 13.5px; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.filters select { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface2); }
+.filters .count { margin-left: auto; color: var(--muted); font-size: 13.5px; }
+.empty { padding: 48px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 14px; }
+
+/* title page */
+.back { margin: 22px 0 14px; background: none; border: 0; color: var(--muted); font-weight: 600; padding: 4px 0; display: inline-flex; gap: 6px; align-items: center; }
+.back:hover { color: var(--accent); }
+.detail { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 28px; }
+.detail .big { aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); position: relative; }
+.detail h1 { font-size: clamp(26px, 4vw, 40px); font-weight: 800; }
+.detail .alt { color: var(--muted); margin-top: 4px; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.pill { padding: 5px 11px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 13px; font-weight: 600; }
+.pill.kg { background: var(--warm-soft); border-color: transparent; color: var(--warm); }
+.detail .desc { max-width: 62ch; color: var(--muted); font-size: 16px; }
+.chapters { margin-top: 30px; }
+.chapters h2 { font-size: 20px; margin-bottom: 12px; }
+.chgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.chgrid button { padding: 11px 13px; text-align: left; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+.chgrid button:hover { border-color: var(--accent); color: var(--accent); }
+.chgrid small { color: var(--muted); font-weight: 500; }
+.note { margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-size: 13.5px; }
+@media (max-width: 640px) { .detail { grid-template-columns: 1fr; } .detail .big { max-width: 240px; } }
+
+/* authors */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 30px; }
+.step { padding: 18px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+.step b { display: block; font: 700 16px var(--font-display); margin-bottom: 6px; }
+.step span { color: var(--muted); font-size: 14px; }
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 34px; }
+.plan { padding: 24px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 14px; }
+.plan.on { border-color: var(--accent); box-shadow: var(--glow); }
+.plan h3 { font-size: 20px; font-weight: 800; }
+.plan .price { font: 800 30px var(--font-display); }
+.plan .price small { font: 600 13px var(--font-body); color: var(--muted); }
+.plan ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; color: var(--muted); font-size: 14.5px; }
+.plan li::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 9px; background: var(--accent); transform: rotate(45deg); }
+.studio { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); gap: 20px; align-items: start; }
+@media (max-width: 800px) { .studio { grid-template-columns: 1fr; } }
+.panel { padding: 22px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); }
+.panel h3 { font-size: 18px; margin-bottom: 14px; }
+.field { display: grid; gap: 6px; margin-bottom: 14px; }
+.field label { font-weight: 600; font-size: 13.5px; }
+.field input, .field select, .field textarea { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface2); width: 100%; }
+.field textarea { min-height: 90px; resize: vertical; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 460px) { .two { grid-template-columns: 1fr; } }
+.lock { margin-bottom: 14px; padding: 12px 14px; border-radius: 12px; background: var(--warm-soft); color: var(--warm); font-weight: 600; font-size: 14px; }
+.mywork { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.mywork:first-of-type { border-top: 0; }
+.mywork .th { width: 44px; aspect-ratio: 3 / 4; border-radius: 6px; overflow: hidden; flex: none; }
+.mywork .tx { flex: 1; min-width: 0; font-weight: 700; }
+.mywork .tx small { display: block; color: var(--muted); font-weight: 500; }
+.mywork .x { background: none; border: 0; color: var(--muted); padding: 6px; }
+.mywork .x:hover { color: var(--warm); }
+
+footer { margin-top: 60px; padding-top: 26px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; display: grid; gap: 8px; }
+footer b { font-family: var(--font-display); color: var(--fg); }
+
+/* reader */
+#reader { position: fixed; inset: 0; z-index: 60; background: var(--bg); overflow-y: auto; overscroll-behavior: contain; }
+.rbar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: calc(10px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 10px max(14px, env(safe-area-inset-left, 0px)); background: var(--header-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.rbar .ttl { flex: 1; min-width: 120px; font: 700 14px var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rbar select { padding: 7px 9px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); max-width: 46vw; }
+.prog { position: absolute; left: 0; bottom: -1px; height: 3px; width: 0; background: var(--accent); box-shadow: var(--glow); }
+.pages { max-width: 760px; margin: 0 auto; display: grid; gap: 0; background: #000; }
+.pages svg { display: block; width: 100%; height: auto; }
+.rend { max-width: 760px; margin: 0 auto; padding: 28px 16px calc(40px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px; text-align: center; justify-items: center; }
+.rend p { color: var(--muted); }
+
+#toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; pointer-events: none; z-index: 90; padding: 11px 18px; border-radius: 12px; background: var(--fg); color: var(--bg); font-weight: 600; max-width: calc(100vw - 32px); transition: 0.25s; }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <button class="logo" data-act="go" data-view="home" aria-label="ChekatLib, на главную">
+      <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M9 5c-2 8 1 13 8 15M31 5c2 8-1 13-8 15" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M12 21l8 15 8-15-8 3z" fill="currentColor"/></svg>
+      <span class="wm">ЧЕКАТ<i>Lib</i></span>
+    </button>
+    <nav class="nav" aria-label="Разделы">
+      <button data-act="go" data-view="home">Главная</button>
+      <button data-act="go" data-view="catalog">Каталог</button>
+      <button data-act="go" data-view="saved">Закладки</button>
+      <button data-act="go" data-view="authors">Авторам</button>
+    </nav>
+    <div class="search">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M14 14l4 4"/></svg>
+      <input id="q" type="search" placeholder="Найти мангу, автора..." aria-label="Поиск" autocomplete="off">
+    </div>
+    <button class="tbtn" id="themeBtn" data-act="theme" aria-label="Сменить тему"></button>
+  </div>
+</header>
+
+<main class="wrap" id="app"></main>
+<footer class="wrap">
+  <div><b>ChekatLib</b> · Digital Hub for Kyrgyz Webtoons · Комикс дүйнөсүнө жолуң</div>
+  <div>Это рабочий прототип. Зарубежные тайтлы показаны, чтобы проверить каталог и читалку. Страницы глав в читалке демонстрационные.</div>
+</footer>
+
+<div id="reader" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ---------- data ---------- */
+const TYPES = { manga: "Манга", manhwa: "Манхва", kg: "Кыргызский" };
+const GENRES = ["Экшен", "Фэнтези", "Приключения", "Драма", "Спорт", "Триллер", "Комедия", "Исторический", "Эпос", "Sci-Fi", "Хоррор"];
+const mk = (id, title, type, genres, author, year, desc, group, alt = "") => ({ id, title, type, genres, author, year, desc, group, alt });
+const BASE = [
+  mk("solo-leveling", "Solo Leveling", "manhwa", ["Экшен", "Фэнтези"], "Chugong, DUBU", 2018, "Самый слабый охотник на монстров получает уникальную систему прокачки и шаг за шагом становится сильнейшим.", "popular", "Поднятие уровня в одиночку"),
+  mk("one-piece", "One Piece", "manga", ["Приключения", "Экшен"], "Эйитиро Ода", 1997, "Пират Луффи собирает команду и отправляется по Гранд Лайн за легендарным сокровищем.", "popular"),
+  mk("jujutsu-kaisen", "Jujutsu Kaisen", "manga", ["Экшен", "Фэнтези"], "Гэгэ Акутами", 2018, "Школьник вступает в школу магов, чтобы бороться с проклятиями и спасти людей.", "popular"),
+  mk("chainsaw-man", "Chainsaw Man", "manga", ["Экшен", "Хоррор"], "Тацуки Фудзимото", 2018, "Бедный парень заключает договор с демоном-бензопилой и попадает в отряд охотников на демонов.", "popular"),
+  mk("demon-slayer", "Demon Slayer", "manga", ["Экшен", "Фэнтези"], "Коёхару Готогэ", 2016, "Танджиро становится охотником на демонов, чтобы вернуть человеческий облик сестре.", "popular"),
+  mk("attack-on-titan", "Attack on Titan", "manga", ["Экшен", "Драма"], "Хадзимэ Исаяма", 2009, "Остатки человечества прячутся за стенами от гигантов, а Эрен клянётся их уничтожить.", "popular"),
+  mk("my-hero-academia", "My Hero Academia", "manga", ["Экшен", "Приключения"], "Кохэй Хорикоси", 2014, "В мире, где у большинства есть особые способности, парень без силы мечтает стать героем.", "popular"),
+  mk("spy-x-family", "Spy x Family", "manga", ["Комедия", "Экшен"], "Тацуя Эндо", 2019, "Шпион, наёмная убийца и девочка-телепат изображают семью ради важного задания.", "popular"),
+  mk("blue-lock", "Blue Lock", "manga", ["Спорт", "Драма"], "Мунэюки Канэсиро", 2018, "Жёсткий проект по воспитанию лучшего нападающего Японии собирает самых амбициозных игроков.", "popular"),
+  mk("one-punch-man", "One-Punch Man", "manga", ["Комедия", "Экшен"], "ONE, Юсукэ Мурата", 2012, "Герой, побеждающий любого врага одним ударом, ищет достойного соперника.", "popular"),
+  mk("saimaluu", "Саймалуу-Таш куткаруучусу", "kg", ["Фэнтези", "Приключения"], "Команда ChekatLib", 2026, "Герои идут по горным тропам, где древние петроглифы оживают и открывают путь к забытой тайне.", "orig", "Спаситель Саймалуу-Таша"),
+  mk("snow-keeper", "Хранитель Снежных Гор", "kg", ["Sci-Fi", "Экшен"], "Команда ChekatLib", 2026, "Бишкек 2088 года. Страж горных перевалов защищает город от тех, кто хочет забрать у него воду и свет.", "orig", "Bishkek-2088"),
+  mk("tulpar", "Тулпар", "kg", ["Фэнтези", "Драма"], "Команда ChekatLib", 2026, "Девушка из кочевого рода находит крылатого коня и отправляется за ним через три перевала.", "orig"),
+  mk("naruto", "Naruto", "manga", ["Экшен", "Приключения"], "Масаси Кисимото", 1999, "Юный ниндзя мечтает стать Хокаге и добиться признания всей деревни.", "classic"),
+  mk("dragon-ball", "Dragon Ball", "manga", ["Экшен", "Приключения"], "Акира Торияма", 1984, "Гоку проходит путь от мальчишки-бойца до защитника Земли.", "classic"),
+  mk("death-note", "Death Note", "manga", ["Триллер", "Драма"], "Цугуми Ооба, Такэси Обата", 2003, "Школьник находит тетрадь смерти и решает очистить мир по-своему.", "classic"),
+  mk("fullmetal-alchemist", "Fullmetal Alchemist", "manga", ["Приключения", "Фэнтези"], "Хирому Аракава", 2001, "Братья-алхимики ищут способ вернуть утраченное и раскрывают тайну государства.", "classic"),
+  mk("berserk", "Berserk", "manga", ["Фэнтези", "Хоррор"], "Кэнтаро Миура", 1989, "Мрачное фэнтези о наёмнике Гатсе и его борьбе с судьбой.", "classic"),
+  mk("vagabond", "Vagabond", "manga", ["Исторический", "Драма"], "Такэхико Иноуэ", 1998, "Историческая драма о жизни и поисках пути мечника Миямото Мусаси.", "classic"),
+  mk("bleach", "Bleach", "manga", ["Экшен", "Фэнтези"], "Тайто Кубо", 2001, "Подросток получает силы жнеца душ и защищает людей от пустых.", "classic"),
+  mk("tokyo-ghoul", "Tokyo Ghoul", "manga", ["Хоррор", "Драма"], "Суи Исида", 2011, "Студент становится наполовину гулем и ищет своё место между двумя мирами.", "classic"),
+  mk("hunter-x-hunter", "Hunter x Hunter", "manga", ["Приключения", "Экшен"], "Ёсихиро Тогаси", 1998, "Гон отправляется на экзамен охотников, чтобы найти отца.", "classic"),
+  mk("vinland-saga", "Vinland Saga", "manga", ["Исторический", "Драма"], "Макото Юкимура", 2005, "Эпос о викингах и поиске земли, где не нужно воевать.", "classic"),
+  mk("haikyu", "Haikyu!!", "manga", ["Спорт", "Драма"], "Харуити Фурудатэ", 2012, "Невысокий Хината мечтает покорить волейбольную площадку.", "classic"),
+  mk("manas", "Манас", "kg", ["Эпос", "Исторический"], "Народный эпос", 0, "Великий эпос о богатыре Манасе, который объединил кыргызские роды и защитил народ.", "epic"),
+  mk("semetey", "Семетей", "kg", ["Эпос", "Приключения"], "Народный эпос", 0, "Сын Манаса возвращается на родину и продолжает дело отца.", "epic"),
+  mk("seytek", "Сейтек", "kg", ["Эпос", "Исторический"], "Народный эпос", 0, "Внук Манаса завершает трилогию и собирает разрозненный народ.", "epic"),
+  mk("er-toshtuk", "Эр Төштүк", "kg", ["Эпос", "Фэнтези"], "Народный эпос", 0, "Сказочный герой спускается в подземный мир и сражается с великанами.", "epic"),
+  mk("kojojash", "Кожожаш", "kg", ["Эпос", "Исторический"], "Народный эпос", 0, "Эпическое сказание о богатыре Кожожаше и его народе.", "epic"),
+  mk("kurmanbek", "Курманбек", "kg", ["Эпос", "Экшен"], "Народный эпос", 0, "Героический эпос о Курманбеке, храбром предводителе своего рода.", "epic"),
+  mk("kanykey", "Каныкей", "kg", ["Эпос", "Драма"], "Народный эпос", 0, "История мудрой Каныкей, жены Манаса, и её роли в судьбе богатыря.", "epic")
+];
+const PAL = [["#0f766e", "#164e63"], ["#7c2d12", "#b45309"], ["#1e3a8a", "#6d28d9"], ["#831843", "#be123c"], ["#14532d", "#0e7490"], ["#312e81", "#0369a1"], ["#7f1d1d", "#c2410c"], ["#134e4a", "#4d7c0f"]];
+const pal = m => m.group === "epic" ? ["#b3171d", "#e8a317"] : m.group === "orig" ? ["#0b6b7d", "#25c9b2"] : PAL[hash(m.id) % PAL.length];
+
+/* ---------- state ---------- */
+let works = store.get("chekat-works", []);
+const all = () => works.concat(BASE);
+const byId = id => all().find(m => m.id === id);
+const S = {
+  view: "home", id: null,
+  f: { q: "", type: "all", genre: "all", sort: "pop" },
+  kgTab: "epic",
+  fav: store.get("chekat-fav", []),
+  sub: store.get("chekat-sub", null),
+  last: store.get("chekat-last", null),
+  reader: null
+};
+
+/* ---------- theme ---------- */
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+function effTheme() { return document.documentElement.dataset.theme || (mq.matches ? "dark" : "light"); }
+function paintThemeBtn() {
+  const dark = effTheme() === "dark";
+  $("#themeBtn").innerHTML = dark
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>';
+  $("#themeBtn").setAttribute("aria-label", dark ? "Включить светлую тему" : "Включить тёмную тему");
+}
+const savedTheme = store.get("chekat-theme", null);
+if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+mq.addEventListener && mq.addEventListener("change", paintThemeBtn);
+paintThemeBtn();
+
+/* ---------- covers ---------- */
+function coverHTML(m, withSub = true) {
+  const [c1, c2] = pal(m);
+  const r = rng(hash(m.id));
+  const sx = 20 + Math.floor(r() * 60);
+  const orn = m.group === "epic" || m.group === "orig" || m.type === "kg"
+    ? '<path d="M0 100 L0 60 L18 50 L30 58 L45 38 L62 56 L78 44 L100 60 L100 100Z" fill="rgba(0,0,0,.32)"/><path d="M-5 100 L25 72 L50 90 L72 66 L105 92 L105 100Z" fill="rgba(0,0,0,.28)"/><g stroke="rgba(255,255,255,.35)" stroke-width=".7" fill="none"><path d="M14 90l6-6 6 6-6 6z"/><path d="M26 90l6-6 6 6-6 6z"/><path d="M38 90l6-6 6 6-6 6z"/></g>'
+    : '<path d="M0 100 L0 70 L24 52 L40 66 L62 40 L84 64 L100 54 L100 100Z" fill="rgba(0,0,0,.3)"/>';
+  const style = `--c1:${c1};--c2:${c2}`;
+  if (m.img) return `<div class="cover img" style="${style};background-image:url('${m.img}')" aria-hidden="true"></div>`;
+  return `<div class="cover" style="${style}" aria-hidden="true">
+    <svg class="sc" viewBox="0 0 100 133" preserveAspectRatio="none"><circle cx="${sx}" cy="${70 + Math.floor(r() * 12)}" r="${9 + Math.floor(r() * 6)}" fill="rgba(255,255,255,.22)"/><g transform="translate(0 33)">${orn}</g></svg>
+    <div class="ct">${esc(m.title)}</div>${withSub ? `<div class="cs">${esc(TYPES[m.type])}${m.year ? " · " + m.year : ""}</div>` : ""}</div>`;
+}
+const badge = m => m.mine ? '<span class="badge mine">Автор</span>' : m.type === "kg" ? '<span class="badge kg">KG</span>' : m.type === "manhwa" ? '<span class="badge">Манхва</span>' : "";
+const favMark = m => S.fav.includes(m.id) ? '<span class="fav" title="В закладках"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12v18l-6-4-6 4z"/></svg></span>' : "";
+function card(m) {
+  return `<button class="card" data-act="open" data-id="${esc(m.id)}"><div class="cv">${coverHTML(m)}${badge(m)}${favMark(m)}</div>
+  <div><div class="t">${esc(m.title)}</div><div class="s">${esc(m.author)}</div></div></button>`;
+}
+
+/* ---------- views ---------- */
+function homeView() {
+  const feat = ["saimaluu", "solo-leveling", "manas"].map(byId);
+  const pop = all().filter(m => m.group === "popular");
+  const kg = all().filter(m => m.group === (S.kgTab === "epic" ? "epic" : "orig") || (S.kgTab === "new" && m.mine));
+  const kgList = S.kgTab === "epic" ? all().filter(m => m.group === "epic") : all().filter(m => m.group === "orig" || m.mine);
+  const classic = all().filter(m => m.group === "classic");
+  const last = S.last && byId(S.last.id);
+  return `
+  <section class="hero">
+    <svg class="orn" aria-hidden="true"><defs><pattern id="orn" width="52" height="52" patternUnits="userSpaceOnUse"><path d="M26 4l22 22-22 22L4 26z M26 15l11 11-11 11-11-11z" fill="none" stroke="currentColor" stroke-width="1.4"/></pattern></defs><rect width="100%" height="100%" fill="url(#orn)"/></svg>
+    <div>
+      <div class="kicker">Манга · комиксы · веб-туны</div>
+      <h1>Читай комиксы <em>Кыргызстана</em> и любимую мангу</h1>
+      <p class="lead">Эпос, новые авторы и мировая классика в одном каталоге. Автор с подпиской публикует свои работы сам.</p>
+      <div class="cta">
+        <button class="btn" data-act="go" data-view="catalog">Открыть каталог</button>
+        <button class="btn ghost" data-act="go" data-view="authors">Стать автором</button>
+      </div>
+      <div class="kg">Комикс дүйнөсүнө жолуң</div>
+    </div>
+    <div class="fan">${feat.map(m => `<button class="cardwrap" data-act="open" data-id="${m.id}" aria-label="${esc(m.title)}">${coverHTML(m, false)}</button>`).join("")}</div>
+  </section>
+  ${last ? `<section class="block"><div class="bh"><h2>Продолжить чтение</h2></div><div class="row"><button class="card" data-act="read" data-id="${last.id}" data-ch="${S.last.ch}"><div class="cv">${coverHTML(last)}</div><div><div class="t">${esc(last.title)}</div><div class="s">Глава ${S.last.ch}</div></div></button></div></section>` : ""}
+  <section class="block">
+    <div class="bh"><div><h2>Популярное</h2><p>Тайтлы, которые читают чаще всего</p></div><button class="more" data-act="go" data-view="catalog">Весь каталог</button></div>
+    <div class="row">${pop.map(card).join("")}</div>
+  </section>
+  <section class="block">
+    <div class="bh"><div><h2>Кыргызские комиксы</h2><p>Народный эпос и оригинальные работы</p></div></div>
+    <div class="tabs" role="group" aria-label="Кыргызские комиксы">
+      <button data-act="kgtab" data-tab="epic" aria-pressed="${S.kgTab === "epic"}">Эпос и легенды</button>
+      <button data-act="kgtab" data-tab="new" aria-pressed="${S.kgTab === "new"}">Новые авторы</button>
+    </div>
+    <div class="grid">${kgList.map(card).join("")}</div>
+  </section>
+  <section class="block">
+    <div class="bh"><div><h2>Классика манги</h2><p>Базовый список, с которого стоит начать</p></div></div>
+    <div class="row">${classic.map(card).join("")}</div>
+  </section>
+  <section class="promo">
+    <div><h2>Рисуешь комиксы? Публикуй на ChekatLib</h2><p>Оформи подписку автора, загрузи обложку и описание, добавь свою работу в каталог Кыргызстана.</p></div>
+    <button class="btn" data-act="go" data-view="authors">Условия для авторов</button>
+  </section>`;
+}
+
+function filtered() {
+  const { q, type, genre, sort } = S.f;
+  let list = all().filter(m => (type === "all" || m.type === type) && (genre === "all" || m.genres.includes(genre)));
+  if (q.trim()) {
+    const s = q.trim().toLowerCase();
+    list = list.filter(m => (m.title + " " + m.alt + " " + m.author).toLowerCase().includes(s));
+  }
+  if (sort === "az") list = list.slice().sort((a, b) => a.title.localeCompare(b.title, "ru"));
+  if (sort === "new") list = list.slice().sort((a, b) => (b.year || 0) - (a.year || 0));
+  return list;
+}
+function catalogView() {
+  const list = filtered();
+  const chip = (v, l) => `<button class="chip" data-act="ftype" data-v="${v}" aria-pressed="${S.f.type === v}">${l}</button>`;
+  return `
+  <div class="pagehead"><h1>Каталог</h1><p>Манга, манхва и кыргызские комиксы. Выбери жанр или найди тайтл через поиск.</p></div>
+  <div class="filters">
+    <div class="chips" role="group" aria-label="Тип">${chip("all", "Все")}${chip("manga", "Манга")}${chip("manhwa", "Манхва")}${chip("kg", "Кыргызские")}</div>
+    <select id="fgenre" aria-label="Жанр"><option value="all">Все жанры</option>${GENRES.map(g => `<option ${S.f.genre === g ? "selected" : ""}>${g}</option>`).join("")}</select>
+    <select id="fsort" aria-label="Сортировка"><option value="pop" ${S.f.sort === "pop" ? "selected" : ""}>Сначала популярные</option><option value="az" ${S.f.sort === "az" ? "selected" : ""}>По алфавиту</option><option value="new" ${S.f.sort === "new" ? "selected" : ""}>Сначала новые</option></select>
+    <span class="count">${list.length} тайтлов</span>
+  </div>
+  ${list.length ? `<div class="grid">${list.map(card).join("")}</div>` : `<div class="empty">Ничего не найдено. Измени запрос или сбрось фильтры.<br><br><button class="btn ghost sm" data-act="reset">Сбросить фильтры</button></div>`}`;
+}
+function savedView() {
+  const list = S.fav.map(byId).filter(Boolean);
+  return `<div class="pagehead"><h1>Закладки</h1><p>Тайтлы, которые ты сохранил, хранятся в этом браузере.</p></div>
+  ${list.length ? `<div class="grid">${list.map(card).join("")}</div>` : `<div class="empty">Закладок пока нет. Открой любой тайтл и нажми «В закладки».<br><br><button class="btn sm" data-act="go" data-view="catalog">Перейти в каталог</button></div>`}`;
+}
+function titleView() {
+  const m = byId(S.id);
+  if (!m) return catalogView();
+  const n = m.mine ? 3 : 12;
+  const fav = S.fav.includes(m.id);
+  const chs = Array.from({ length: n }, (_, i) => `<button data-act="read" data-id="${m.id}" data-ch="${i + 1}">Глава ${i + 1}<small>демо</small></button>`).join("");
+  const resume = S.last && S.last.id === m.id ? S.last.ch : 1;
+  return `
+  <button class="back" data-act="back">← Назад</button>
+  <div class="detail">
+    <div class="big">${coverHTML(m)}</div>
+    <div>
+      <h1>${esc(m.title)}</h1>
+      ${m.alt ? `<div class="alt">${esc(m.alt)}</div>` : ""}
+      <div class="facts">
+        <span class="pill ${m.type === "kg" ? "kg" : ""}">${TYPES[m.type]}</span>
+        ${m.genres.map(g => `<span class="pill">${esc(g)}</span>`).join("")}
+        ${m.year ? `<span class="pill">${m.year}</span>` : `<span class="pill">Народный эпос</span>`}
+      </div>
+      <p class="desc">${esc(m.desc)}</p>
+      <p class="alt" style="margin-top:12px">Автор: ${esc(m.author)}</p>
+      <div class="cta" style="margin-top:22px">
+        <button class="btn" data-act="read" data-id="${m.id}" data-ch="${resume}">${resume > 1 ? "Продолжить, глава " + resume : "Читать с первой главы"}</button>
+        <button class="btn ghost" data-act="fav" data-id="${m.id}">${fav ? "Убрать из закладок" : "В закладки"}</button>
+      </div>
+      <div class="note">Страницы глав в этой версии демонстрационные: они показывают, как работает читалка. Реальные страницы появятся, когда автор загрузит главы.</div>
+    </div>
+  </div>
+  <section class="chapters"><h2>Главы</h2><div class="chgrid">${chs}</div></section>`;
+}
+const PLANS = {
+  start: { name: "Старт", price: "299", perks: ["До 3 работ в каталоге", "Своя страница автора", "Загрузка глав без ограничений"] },
+  pro: { name: "Про", price: "799", perks: ["Работ без ограничений", "Приоритет в подборках главной", "Статистика читателей по главам"] }
+};
+function authorsView() {
+  const sub = S.sub, lim = sub === "start" ? 3 : Infinity;
+  const mine = works;
+  const full = mine.length >= lim;
+  const locked = !sub || full;
+  return `
+  <div class="pagehead"><h1>Авторам</h1><p>Подписка открывает публикацию. Читатели читают бесплатно, а ты получаешь свою страницу и место в каталоге.</p></div>
+  <div class="steps">
+    <div class="step"><b>1. Выбери тариф</b><span>Старт для первой работы, Про для серьёзных проектов.</span></div>
+    <div class="step"><b>2. Загрузи работу</b><span>Название, жанр, описание и обложка.</span></div>
+    <div class="step"><b>3. Читатели находят тебя</b><span>Работа появляется в каталоге и в разделе «Новые авторы».</span></div>
+  </div>
+  <div class="plans">${Object.entries(PLANS).map(([k, p]) => `
+    <div class="plan ${sub === k ? "on" : ""}"><h3>${p.name}</h3><div class="price">${p.price} сом <small>/ месяц, пример цены</small></div>
+    <ul>${p.perks.map(x => `<li>${x}</li>`).join("")}</ul>
+    ${sub === k ? `<button class="btn ghost" data-act="unsub">Отключить демо-подписку</button>` : `<button class="btn" data-act="plan" data-plan="${k}">Оформить, демо</button>`}</div>`).join("")}
+  </div>
+  <div class="studio">
+    <form class="panel" id="pubform" autocomplete="off">
+      <h3>Опубликовать работу</h3>
+      ${!sub ? `<div class="lock">Публикация доступна после оформления подписки.</div>` : full ? `<div class="lock">На тарифе «Старт» можно держать до 3 работ. Удали одну или перейди на «Про».</div>` : ""}
+      <div class="field"><label for="wt">Название</label><input id="wt" required maxlength="60" ${locked ? "disabled" : ""} placeholder="Например, Көк Бөрү"></div>
+      <div class="two">
+        <div class="field"><label for="wty">Тип</label><select id="wty" ${locked ? "disabled" : ""}><option value="kg">Кыргызский комикс</option><option value="manga">Манга</option><option value="manhwa">Манхва</option></select></div>
+        <div class="field"><label for="wg">Жанр</label><select id="wg" ${locked ? "disabled" : ""}>${GENRES.map(g => `<option>${g}</option>`).join("")}</select></div>
+      </div>
+      <div class="field"><label for="wd">Описание</label><textarea id="wd" required maxlength="400" ${locked ? "disabled" : ""} placeholder="О чём твоя история?"></textarea></div>
+      <div class="field"><label for="wc">Обложка, необязательно</label><input id="wc" type="file" accept="image/*" ${locked ? "disabled" : ""}></div>
+      <button class="btn" type="submit" ${locked ? "disabled" : ""}>Опубликовать</button>
+      <p class="note">Демо-режим: подписка и работы сохраняются только в этом браузере. Оплата и загрузка страниц глав подключаются вместе с сервером.</p>
+    </form>
+    <div class="panel"><h3>Мои работы</h3>
+      ${mine.length ? mine.map(w => `<div class="mywork"><div class="th">${coverHTML(w, false)}</div><div class="tx">${esc(w.title)}<small>${TYPES[w.type]} · ${esc(w.genres[0])}</small></div><button class="x" data-act="delwork" data-id="${w.id}" aria-label="Удалить ${esc(w.title)}">✕</button></div>`).join("") : `<p style="color:var(--muted)">Пока пусто. Первая работа появится здесь и в каталоге.</p>`}
+    </div>
+  </div>`;
+}
+
+function render() {
+  const nav = S.view === "title" ? "catalog" : S.view;
+  document.querySelectorAll(".nav button").forEach(b => b.setAttribute("aria-current", b.dataset.view === nav ? "page" : "false"));
+  $("#app").innerHTML = ({ home: homeView, catalog: catalogView, saved: savedView, authors: authorsView, title: titleView })[S.view]();
+}
+let prev = [];
+function go(view, id) {
+  if (S.view !== view || S.id !== id) prev.push({ view: S.view, id: S.id });
+  S.view = view; S.id = id || null;
+  render();
+  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+}
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 2400);
+}
+
+/* ---------- reader ---------- */
+function pageSVG(m, ch, n) {
+  const [c1, c2] = pal(m);
+  const r = rng(hash(m.id + "|" + ch + "|" + n));
+  const v = (n + ch) % 3;
+  let art = "";
+  if (v === 0) {
+    art = `<circle cx="${220 + r() * 360}" cy="250" r="95" fill="rgba(255,255,255,.85)"/><path d="M0 760L170 470L300 620L470 360L640 600L800 500V1100H0Z" fill="rgba(0,0,0,.35)"/><path d="M0 900L220 650L380 800L560 590L800 820V1100H0Z" fill="rgba(0,0,0,.52)"/>`;
+  } else if (v === 1) {
+    for (let i = 0; i < 9; i++) { const w = 60 + r() * 70, h = 200 + r() * 520, x = i * 92 - 10; art += `<rect x="${x}" y="${1000 - h}" width="${w}" height="${h}" fill="rgba(0,0,0,${0.3 + r() * 0.3})"/>`; for (let k = 0; k < 6; k++) art += `<rect x="${x + 10 + (k % 2) * 28}" y="${1000 - h + 24 + Math.floor(k / 2) * 46}" width="14" height="20" fill="rgba(255,235,150,.55)"/>`; }
+    art += `<rect y="1000" width="800" height="100" fill="rgba(0,0,0,.6)"/>`;
+  } else {
+    for (let i = 0; i < 54; i++) { const a = i / 54 * Math.PI * 2, x2 = 400 + Math.cos(a) * 900, y2 = 520 + Math.sin(a) * 900; art += `<line x1="${400 + Math.cos(a) * (150 + r() * 120)}" y1="${520 + Math.sin(a) * (150 + r() * 120)}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,${0.15 + r() * 0.25})" stroke-width="${2 + r() * 5}"/>`; }
+    art += `<circle cx="400" cy="520" r="120" fill="rgba(0,0,0,.4)"/><path d="M340 560q60-120 120 0" stroke="#fff" stroke-width="8" fill="none" stroke-linecap="round"/>`;
+  }
+  const bx = 250 + r() * 300;
+  return `<svg viewBox="0 0 800 1100" role="img" aria-label="Демо-страница ${n}" font-family="Montserrat, Arial, sans-serif">
+  <defs><linearGradient id="g${n}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>
+  <rect width="800" height="1100" fill="url(#g${n})"/>${art}
+  <g><ellipse cx="${bx}" cy="${130 + r() * 60}" rx="210" ry="70" fill="#fff"/><text x="${bx}" y="${142 + 0}" text-anchor="middle" font-size="26" font-weight="800" fill="#111">Демо-страница ${n}</text></g>
+  <rect x="0" y="1030" width="800" height="70" fill="rgba(0,0,0,.55)"/><text x="28" y="1073" font-size="24" font-weight="700" fill="#fff">${esc(m.title)} · глава ${ch} · стр. ${n}</text></svg>`;
+}
+function openReader(id, ch) {
+  const m = byId(id); if (!m) return;
+  const total = m.mine ? 3 : 12;
+  ch = Math.max(1, Math.min(total, +ch || 1));
+  S.reader = { id, ch };
+  S.last = { id, ch }; store.set("chekat-last", S.last);
+  const opts = Array.from({ length: total }, (_, i) => `<option value="${i + 1}" ${i + 1 === ch ? "selected" : ""}>Глава ${i + 1}</option>`).join("");
+  const R = $("#reader");
+  R.innerHTML = `<div class="rbar"><button class="btn ghost sm" data-act="closereader">← Закрыть</button><div class="ttl">${esc(m.title)}</div>
+    <button class="btn ghost sm" data-act="rprev" ${ch === 1 ? "disabled" : ""} aria-label="Предыдущая глава">←</button>
+    <select id="rsel" aria-label="Глава">${opts}</select>
+    <button class="btn ghost sm" data-act="rnext" ${ch === total ? "disabled" : ""} aria-label="Следующая глава">→</button><div class="prog" id="prog"></div></div>
+    <div class="pages">${[1, 2, 3, 4, 5, 6].map(n => pageSVG(m, ch, n)).join("")}</div>
+    <div class="rend"><p>Конец главы ${ch}. Страницы демонстрационные.</p>
+      ${ch < total ? `<button class="btn" data-act="rnext">Следующая глава</button>` : `<button class="btn" data-act="closereader">Вернуться к тайтлу</button>`}</div>`;
+  R.hidden = false; R.scrollTop = 0;
+  document.body.style.overflow = "hidden";
+  R.onscroll = () => { const p = R.scrollTop / Math.max(1, R.scrollHeight - R.clientHeight); const b = $("#prog"); if (b) b.style.width = Math.min(100, p * 100) + "%"; };
+}
+function closeReader() {
+  $("#reader").hidden = true; $("#reader").innerHTML = ""; S.reader = null;
+  document.body.style.overflow = "";
+  if (S.view === "home") render();
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-act]"); if (!t) return;
+  const d = t.dataset;
+  switch (d.act) {
+    case "go": go(d.view); break;
+    case "open": go("title", d.id); break;
+    case "back": { const p = prev.pop(); if (p) { S.view = p.view; S.id = p.id; render(); window.scrollTo(0, 0); } else go("catalog"); break; }
+    case "read": openReader(d.id, d.ch); break;
+    case "closereader": closeReader(); break;
+    case "rprev": openReader(S.reader.id, S.reader.ch - 1); break;
+    case "rnext": openReader(S.reader.id, S.reader.ch + 1); break;
+    case "theme": {
+      const next = effTheme() === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next; store.set("chekat-theme", next); paintThemeBtn(); break;
+    }
+    case "kgtab": S.kgTab = d.tab; render(); break;
+    case "ftype": S.f.type = d.v; render(); break;
+    case "reset": S.f = { q: "", type: "all", genre: "all", sort: "pop" }; $("#q").value = ""; render(); break;
+    case "fav": {
+      const i = S.fav.indexOf(d.id);
+      if (i >= 0) { S.fav.splice(i, 1); toast("Убрано из закладок"); } else { S.fav.push(d.id); toast("Добавлено в закладки"); }
+      store.set("chekat-fav", S.fav); render(); break;
+    }
+    case "plan": S.sub = d.plan; store.set("chekat-sub", S.sub); toast("Демо-подписка «" + PLANS[d.plan].name + "» включена"); render(); break;
+    case "unsub": S.sub = null; store.set("chekat-sub", null); toast("Демо-подписка отключена"); render(); break;
+    case "delwork": works = works.filter(w => w.id !== d.id); store.set("chekat-works", works); toast("Работа удалена"); render(); break;
+  }
+});
+document.addEventListener("change", e => {
+  if (e.target.id === "fgenre") { S.f.genre = e.target.value; render(); }
+  if (e.target.id === "fsort") { S.f.sort = e.target.value; render(); }
+  if (e.target.id === "rsel") openReader(S.reader.id, e.target.value);
+});
+$("#q").addEventListener("input", e => {
+  S.f.q = e.target.value;
+  if (S.view !== "catalog") { S.view = "catalog"; S.id = null; }
+  render();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && S.reader) closeReader(); });
+document.addEventListener("submit", e => {
+  if (e.target.id !== "pubform") return;
+  e.preventDefault();
+  const lim = S.sub === "start" ? 3 : Infinity;
+  if (!S.sub || works.length >= lim) return;
+  const title = $("#wt").value.trim(), desc = $("#wd").value.trim();
+  if (!title || !desc) return;
+  const w = { id: "w" + Date.now().toString(36), title, type: $("#wty").value, genres: [$("#wg").value], author: "Вы", year: new Date().getFullYear(), desc, group: "mine", alt: "", mine: true };
+  const file = $("#wc").files[0];
+  const finish = () => {
+    works.unshift(w);
+    if (!store.set("chekat-works", works) && w.img) { delete w.img; store.set("chekat-works", works); }
+    toast("Работа опубликована в каталоге"); render();
+  };
+  if (file && file.size < 900000) {
+    const fr = new FileReader(); fr.onload = () => { w.img = fr.result; finish(); }; fr.readAsDataURL(file);
+  } else { if (file) toast("Обложка больше 900 КБ, работа добавлена без неё"); finish(); }
+});
+
+render();
+</script>
+
+</body></html>
